@@ -7,6 +7,7 @@ use App\User;
 use App\Game;
 use App\Turn;
 use App\Events\NewGame;
+use Pusher\Pusher;
 
 class HomeController extends Controller
 {
@@ -29,31 +30,29 @@ class HomeController extends Controller
     {
         $user = $request->user();
         $usersQuery = User::where('id', '!=', $user->id);
-
-        if ($request->has('search')) {
-            $usersQuery->where('name', 'like', "%{$request->get('search')}%");
+        if($request->has('search')){
+            $usersQuery->where('name','like',"%{$request->get('search')}%");
         }
-
-        $users = $usersQuery->paginate(5);
+        $users = $usersQuery->paginate(10);
         return view('home', compact('user', 'users'));
     }
-
-    public function newGame(Request $request)
-    {
-        $user = $request->user();
-        $otherUserId = $request->get('user_id');
+    
+    public function newGame(Request $request){
+        $user = $request->user(); //Invitor always starts with X
+        $otherUserId = $request->get('user_id'); //Invitee always goes with O
+        //creating one record in the db.
         $gameId = Game::insertGetId([]);
-        for ($i=1; $i <= 9; $i++) {
+        for($i = 1; $i <= 9; $i++){
             Turn::insert([
                 "game_id" => $gameId,
                 "id" => $i,
                 "type" => $i % 2 ? 'x' : 'o',
-                "player_id" => $i % 2? $user->id : $otherUserId
+                "player_id" => $i % 2 ? $user->id : $otherUserId
             ]);
         }
-
-        event(new NewGame());
-
+    
+        event(new NewGame($otherUserId, $gameId, $user->name));
+       
         return redirect("/board/{$gameId}");
     }
 }

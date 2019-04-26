@@ -14,6 +14,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        //added manually from https://www.codespeaker.com/laravel-framework/solutions-for-common-errors-on-artisan-commands/
+        //to solve default string length errors
         Schema::defaultStringLength(191);
 
     }
